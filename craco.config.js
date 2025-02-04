@@ -3,7 +3,7 @@ const ModuleFederationPlugin = require('webpack/lib/container/ModuleFederationPl
 module.exports = {
   webpack: {
     configure: (webpackConfig) => {
-      webpackConfig.output.publicPath = 'http://localhost:3009/';
+      webpackConfig.output.publicPath = 'https://qoutes-child-app.vercel.app/';
 
       webpackConfig.plugins.push(
         new ModuleFederationPlugin({
