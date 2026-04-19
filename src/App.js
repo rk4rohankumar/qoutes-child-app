@@ -9,12 +9,12 @@ import QuoteCard from "./components/QuoteCard";
 import FavoritesList from "./components/FavoritesList";
 import useFavorites from "./hooks/useFavorites";
 
-const QUOTABLE_TAGS = {
-  inspire: "inspirational",
-  love: "love",
-  life: "life",
-  funny: "humor",
-  wisdom: "wisdom",
+const CATEGORY_KEYWORDS = {
+  inspire: /\b(inspire|inspiration|dream|believe|succeed|success|possible|achieve|greatness|hope)\b/i,
+  love: /\b(love|heart|kind|compassion|affection|soul)\b/i,
+  life: /\b(life|live|living|world|journey|exist)\b/i,
+  funny: /\b(laugh|funny|humor|joke|witty|silly|absurd)\b/i,
+  wisdom: /\b(wisdom|wise|truth|virtue|knowledge|learn|understand)\b/i,
 };
 
 const buildId = (text, author) =>
@@ -23,44 +23,65 @@ const buildId = (text, author) =>
     .toLowerCase()
     .replace(/\s+/g, "-")}`;
 
-const fetchFromQuotesRest = async (category) => {
-  const res = await axios.get(
-    `https://quotes.rest/qod?category=${encodeURIComponent(category)}`,
-    { timeout: 8000 }
-  );
-  const q = res?.data?.contents?.quotes?.[0];
-  if (!q || !q.quote) throw new Error("Empty response from quotes.rest");
+const fetchFromStoic = async (category) => {
+  const res = await axios.get("https://stoic-quotes.com/api/quote", {
+    timeout: 8000,
+  });
+  const q = res?.data;
+  if (!q || !q.text) throw new Error("Empty response from stoic-quotes");
   return {
-    id: q.id ? `qr-${q.id}` : buildId(q.quote, q.author),
-    text: q.quote,
+    id: buildId(q.text, q.author),
+    text: q.text,
     author: q.author,
     category,
-    source: "quotes.rest",
+    source: "stoic-quotes.com",
   };
 };
 
-const fetchFromQuotable = async (category) => {
-  const tag = QUOTABLE_TAGS[category] || "inspirational";
-  const res = await axios.get(
-    `https://api.quotable.io/random?tags=${encodeURIComponent(tag)}`,
-    { timeout: 8000 }
-  );
+const fetchFromDummyJson = async (category) => {
+  const pattern = CATEGORY_KEYWORDS[category];
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    const res = await axios.get("https://dummyjson.com/quotes/random", {
+      timeout: 8000,
+    });
+    const q = res?.data;
+    if (!q || !q.quote) continue;
+    if (!pattern || pattern.test(q.quote) || pattern.test(q.author || "")) {
+      return {
+        id: q.id ? `dj-${q.id}` : buildId(q.quote, q.author),
+        text: q.quote,
+        author: q.author,
+        category,
+        source: "dummyjson.com",
+      };
+    }
+  }
+  const res = await axios.get("https://dummyjson.com/quotes/random", {
+    timeout: 8000,
+  });
   const q = res?.data;
-  if (!q || !q.content) throw new Error("Empty response from quotable.io");
+  if (!q || !q.quote) throw new Error("Empty response from dummyjson");
   return {
-    id: q._id ? `qt-${q._id}` : buildId(q.content, q.author),
-    text: q.content,
+    id: q.id ? `dj-${q.id}` : buildId(q.quote, q.author),
+    text: q.quote,
     author: q.author,
     category,
-    source: "quotable.io",
+    source: "dummyjson.com",
   };
 };
 
 const fetchQuoteWithFallback = async (category) => {
+  if (category === "wisdom") {
+    try {
+      return await fetchFromStoic(category);
+    } catch {
+      return await fetchFromDummyJson(category);
+    }
+  }
   try {
-    return await fetchFromQuotesRest(category);
-  } catch (err) {
-    return await fetchFromQuotable(category);
+    return await fetchFromDummyJson(category);
+  } catch {
+    return await fetchFromStoic(category);
   }
 };
 
