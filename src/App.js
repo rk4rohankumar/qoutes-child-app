@@ -1,78 +1,255 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import axios from "axios";
-import { motion } from "framer-motion";
-import 'tailwindcss/tailwind.css';
+import "tailwindcss/tailwind.css";
 
-const Loader = () => (
-  <div className="flex flex-col items-center justify-center h-screen">
-    <motion.div
-      className="w-16 h-16 border-4 border-t-yellow-500 border-gray-300 rounded-full animate-spin"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5, repeat: Infinity }}
-    />
-    <p className="text-lg font-semibold text-gray-700 mt-4">Loading Quote...</p>
-  </div>
-);
+import Loader from "./components/Loader";
+import ErrorState from "./components/ErrorState";
+import CategorySelect from "./components/CategorySelect";
+import QuoteCard from "./components/QuoteCard";
+import FavoritesList from "./components/FavoritesList";
+import useFavorites from "./hooks/useFavorites";
+
+const QUOTABLE_TAGS = {
+  inspire: "inspirational",
+  love: "love",
+  life: "life",
+  funny: "humor",
+  wisdom: "wisdom",
+};
+
+const buildId = (text, author) =>
+  `${(author || "unknown").toLowerCase().replace(/\s+/g, "-")}::${(text || "")
+    .slice(0, 64)
+    .toLowerCase()
+    .replace(/\s+/g, "-")}`;
+
+const fetchFromQuotesRest = async (category) => {
+  const res = await axios.get(
+    `https://quotes.rest/qod?category=${encodeURIComponent(category)}`,
+    { timeout: 8000 }
+  );
+  const q = res?.data?.contents?.quotes?.[0];
+  if (!q || !q.quote) throw new Error("Empty response from quotes.rest");
+  return {
+    id: q.id ? `qr-${q.id}` : buildId(q.quote, q.author),
+    text: q.quote,
+    author: q.author,
+    category,
+    source: "quotes.rest",
+  };
+};
+
+const fetchFromQuotable = async (category) => {
+  const tag = QUOTABLE_TAGS[category] || "inspirational";
+  const res = await axios.get(
+    `https://api.quotable.io/random?tags=${encodeURIComponent(tag)}`,
+    { timeout: 8000 }
+  );
+  const q = res?.data;
+  if (!q || !q.content) throw new Error("Empty response from quotable.io");
+  return {
+    id: q._id ? `qt-${q._id}` : buildId(q.content, q.author),
+    text: q.content,
+    author: q.author,
+    category,
+    source: "quotable.io",
+  };
+};
+
+const fetchQuoteWithFallback = async (category) => {
+  try {
+    return await fetchFromQuotesRest(category);
+  } catch (err) {
+    return await fetchFromQuotable(category);
+  }
+};
 
 const QuotesPage = () => {
-  const [quote, setQuote] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("inspire");
+  const [quote, setQuote] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [toast, setToast] = useState("");
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  const copyTimer = useRef(null);
+  const toastTimer = useRef(null);
+
+  const { favorites, isFavorite, toggleFavorite, removeFavorite } =
+    useFavorites();
+
+  const loadNew = useCallback(
+    async (cat) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const next = await fetchQuoteWithFallback(cat);
+        setQuote(next);
+        setHistory((prev) => {
+          const trimmed = [next, ...prev].slice(0, 10);
+          return trimmed;
+        });
+        setHistoryIndex(0);
+      } catch (err) {
+        setError(
+          "Both quote providers failed. Check your connection and try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
-    fetchQuote();
-  }, [category]);
+    loadNew(category);
+  }, [category, loadNew]);
 
-  const fetchQuote = async () => {
-    setLoading(true);
+  useEffect(
+    () => () => {
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      if (toastTimer.current) clearTimeout(toastTimer.current);
+    },
+    []
+  );
+
+  const showToast = (msg) => {
+    setToast(msg);
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    toastTimer.current = setTimeout(() => setToast(""), 1800);
+  };
+
+  const handleCopy = async () => {
+    if (!quote) return;
+    const payload = `"${quote.text}" — ${quote.author || "Unknown Author"}`;
     try {
-      const response = await axios.get(`https://quotes.rest/qod?category=${category}`);
-      setQuote(response.data.contents.quotes[0]);
-    } catch (error) {
-      console.error("Failed to fetch quote:", error);
-    } finally {
-      setLoading(false);
+      await navigator.clipboard.writeText(payload);
+      setCopied(true);
+      if (copyTimer.current) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+      showToast("Copy failed");
     }
   };
 
-  if (loading) return <Loader />;
+  const handleShare = async () => {
+    if (!quote) return;
+    const text = `"${quote.text}" — ${quote.author || "Unknown Author"}`;
+    const shareData = {
+      title: "Quote of the Day",
+      text,
+      url: typeof window !== "undefined" ? window.location.href : undefined,
+    };
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share(shareData);
+        return;
+      } catch {
+        /* user cancelled or share failed — fall through to clipboard */
+      }
+    }
+    try {
+      const url = shareData.url || "";
+      await navigator.clipboard.writeText(`${text}${url ? ` ${url}` : ""}`);
+      showToast("Link copied to clipboard");
+    } catch {
+      showToast("Share unavailable");
+    }
+  };
+
+  const handleToggleFavorite = () => {
+    if (!quote) return;
+    toggleFavorite(quote);
+  };
+
+  const handlePrev = () => {
+    if (historyIndex < history.length - 1) {
+      const nextIdx = historyIndex + 1;
+      setHistoryIndex(nextIdx);
+      setQuote(history[nextIdx]);
+    }
+  };
+
+  const handleNext = () => {
+    if (historyIndex > 0) {
+      const nextIdx = historyIndex - 1;
+      setHistoryIndex(nextIdx);
+      setQuote(history[nextIdx]);
+    } else {
+      loadNew(category);
+    }
+  };
+
+  const canPrev = historyIndex < history.length - 1;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 text-center">
-      <h1 className="text-3xl font-bold mb-4">✨ Quote of the Day ✨</h1>
+    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
+      <div className="mx-auto max-w-4xl">
+        <header className="mb-8 text-center">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">
+            Daily Inspiration
+          </p>
+          <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-slate-900">
+            Quote of the Day
+          </h1>
+          <p className="mt-3 text-sm text-slate-600">
+            A fresh line of wisdom, every time you ask.
+          </p>
+        </header>
 
-      {/* Category Selection */}
-      <select
-        className="p-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-yellow-500"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      >
-        <option value="inspire">Inspiration</option>
-        <option value="love">Love</option>
-        <option value="life">Life</option>
-        <option value="funny">Funny</option>
-      </select>
+        <div className="mb-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <CategorySelect
+            value={category}
+            onChange={setCategory}
+            disabled={loading}
+          />
+          <button
+            type="button"
+            onClick={() => setShowFavorites((v) => !v)}
+            aria-label={
+              showFavorites ? "Hide favorites list" : "Show favorites list"
+            }
+            aria-pressed={showFavorites}
+            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:self-auto"
+          >
+            {showFavorites ? "Hide favorites" : `Show favorites (${favorites.length})`}
+          </button>
+        </div>
 
-      {/* Quote Card */}
-      <motion.div
-        className="bg-white shadow-lg p-6 rounded-lg"
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-      >
-        <p className="text-lg font-semibold text-gray-800">"{quote?.quote}"</p>
-        <p className="text-sm text-gray-500 mt-2">- {quote?.author}</p>
-      </motion.div>
+        {loading && <Loader />}
 
-      {/* Generate Button */}
-      <button
-        className="mt-4 bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600"
-        onClick={fetchQuote}
-      >
-        Get New Quote
-      </button>
-    </div>
+        {!loading && error && (
+          <ErrorState message={error} onRetry={() => loadNew(category)} />
+        )}
+
+        {!loading && !error && quote && (
+          <QuoteCard
+            quote={quote}
+            isFavorite={isFavorite(quote.id)}
+            onToggleFavorite={handleToggleFavorite}
+            onCopy={handleCopy}
+            onShare={handleShare}
+            onPrev={handlePrev}
+            onNext={handleNext}
+            canPrev={canPrev}
+            copied={copied}
+            toast={toast}
+          />
+        )}
+
+        {showFavorites && (
+          <div className="mt-10">
+            <h2 className="mb-4 text-center font-serif text-2xl font-semibold text-slate-900">
+              Your favorites
+            </h2>
+            <FavoritesList favorites={favorites} onRemove={removeFavorite} />
+          </div>
+        )}
+      </div>
+    </main>
   );
 };
 
