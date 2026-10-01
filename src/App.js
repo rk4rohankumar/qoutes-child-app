@@ -210,7 +210,7 @@ const QuotesPage = () => {
     <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-600">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-700">
             Daily Inspiration
           </p>
           <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-slate-900">
@@ -230,10 +230,8 @@ const QuotesPage = () => {
           <button
             type="button"
             onClick={() => setShowFavorites((v) => !v)}
-            aria-label={
-              showFavorites ? "Hide favorites list" : "Show favorites list"
-            }
-            aria-pressed={showFavorites}
+            aria-expanded={showFavorites}
+            aria-controls="favorites-panel"
             className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:self-auto"
           >
             {showFavorites ? "Hide favorites" : `Show favorites (${favorites.length})`}
@@ -262,12 +260,19 @@ const QuotesPage = () => {
         )}
 
         {showFavorites && (
-          <div className="mt-10">
-            <h2 className="mb-4 text-center font-serif text-2xl font-semibold text-slate-900">
+          <section
+            id="favorites-panel"
+            aria-labelledby="favorites-heading"
+            className="mt-10"
+          >
+            <h2
+              id="favorites-heading"
+              className="mb-4 text-center font-serif text-2xl font-semibold text-slate-900"
+            >
               Your favorites
             </h2>
             <FavoritesList favorites={favorites} onRemove={removeFavorite} />
-          </div>
+          </section>
         )}
       </div>
     </main>
