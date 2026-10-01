@@ -207,13 +207,13 @@ const QuotesPage = () => {
   const canPrev = historyIndex < history.length - 1;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
+    <section aria-labelledby="quotes-heading" className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 px-4 py-10 sm:py-16">
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-700">
             Daily Inspiration
           </p>
-          <h1 className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-slate-900">
+          <h1 id="quotes-heading" className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-slate-900">
             Quote of the Day
           </h1>
           <p className="mt-3 text-sm text-slate-600">
@@ -275,7 +275,7 @@ const QuotesPage = () => {
           </section>
         )}
       </div>
-    </main>
+    </section>
   );
 };
 
