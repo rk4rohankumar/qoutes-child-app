@@ -1,3 +1,6 @@
+const snippet = (text = "", max = 60) =>
+  text.length > max ? `${text.slice(0, max).trimEnd()}…` : text;
+
 const FavoritesList = ({ favorites, onRemove }) => {
   if (!favorites.length) {
     return (
@@ -28,7 +31,9 @@ const FavoritesList = ({ favorites, onRemove }) => {
           <button
             type="button"
             onClick={() => onRemove(fav.id)}
-            aria-label={`Remove favorite quote by ${fav.author || "Unknown Author"}`}
+            aria-label={`Remove "${snippet(fav.text)}" by ${
+              fav.author || "Unknown Author"
+            } from favorites`}
             className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 focus:outline-none focus:ring-2 focus:ring-rose-400"
           >
             Remove

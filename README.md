@@ -1,70 +1,45 @@
-# Getting Started with Create React App
+# Quotes · Micro Frontend remote
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A small React app that shows a quote of the day with category filters, a
+10-item history, copy/share actions and favorites persisted to `localStorage`.
+It runs standalone and is also exposed as a webpack Module Federation remote
+consumed by the [micro-frontend-host](https://github.com/rk4rohankumar/micro-frontend-host) shell.
 
-## Available Scripts
+Stack: CRA 5 + CRACO 7, React 19, Tailwind 3, axios, framer-motion.
 
-In the project directory, you can run:
+## Data sources
 
-### `npm start`
+No API keys required.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- `https://dummyjson.com/quotes/random` – general quotes; categories are matched client-side by keyword.
+- `https://stoic-quotes.com/api/quote` – primary source for the Wisdom category, fallback for the rest.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+If one provider fails the other is tried; if both fail an error state with a retry button is shown.
 
-### `npm test`
+## Run / build
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```bash
+npm install
+npm start          # dev server, http://localhost:3000
+npm run build      # production build to build/ (publicPath 'auto')
+```
 
-### `npm run build`
+Deployed at https://qoutes-child-app.vercel.app (the repo name typo is intentional).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## How the host consumes it
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+`craco.config.js` registers `ModuleFederationPlugin` with:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+- scope name `QuotesApp`
+- `filename: 'remoteEntry.js'` → https://qoutes-child-app.vercel.app/remoteEntry.js
+- `exposes: { './QuotesApp': './src/App' }` – the default export is the root component
 
-### `npm run eject`
+The host injects `remoteEntry.js`, calls `container.init(__webpack_share_scopes__.default)`
+and then `container.get('./QuotesApp')`.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+`react`, `react-dom`, `framer-motion` and `axios` are declared as `singleton`
+shared modules with `requiredVersion` taken from `package.json`, so the remote
+reuses the host's copies instead of bundling duplicates. `src/index.js` is an
+async boundary (`import('./bootstrap')`) so the share scope can be negotiated
+before any React code runs, which is what makes the same build work both
+standalone and inside the shell.

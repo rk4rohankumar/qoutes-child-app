@@ -2,6 +2,7 @@
   "name": "quotes",
   "version": "0.1.0",
   "private": true,
+  "description": "Quotes micro frontend remote (Module Federation scope QuotesApp): quote of the day with categories, history, sharing and saved favorites.",
   "dependencies": {
     "@craco/craco": "^7.1.0",
     "autoprefixer": "^10.4.20",

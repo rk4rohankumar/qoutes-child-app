@@ -124,12 +124,14 @@ const QuoteCard = ({
       </span>
 
       <div className="relative">
-        <blockquote className="font-serif text-2xl sm:text-3xl md:text-4xl leading-snug text-slate-800">
-          {text}
-        </blockquote>
-        <figcaption className="mt-6 text-sm sm:text-base font-medium uppercase tracking-[0.2em] text-slate-600">
-          &mdash; {author}
-        </figcaption>
+        <figure>
+          <blockquote className="font-serif text-2xl sm:text-3xl md:text-4xl leading-snug text-slate-800">
+            {text}
+          </blockquote>
+          <figcaption className="mt-6 text-sm sm:text-base font-medium uppercase tracking-[0.2em] text-slate-600">
+            &mdash; {author}
+          </figcaption>
+        </figure>
 
         <div className="mt-8 flex flex-wrap items-center gap-2">
           <button
@@ -154,8 +156,7 @@ const QuoteCard = ({
           <button
             type="button"
             onClick={onCopy}
-            aria-label="Copy quote to clipboard"
-            aria-pressed={copied}
+            aria-label={copied ? "Copied! Quote is on your clipboard" : "Copy quote to clipboard"}
             className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
             <IconCopy />
@@ -173,7 +174,9 @@ const QuoteCard = ({
           <button
             type="button"
             onClick={onToggleFavorite}
-            aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
+            aria-label={
+              isFavorite ? "Saved. Remove from favorites" : "Save to favorites"
+            }
             aria-pressed={isFavorite}
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm ring-1 focus:outline-none focus:ring-2 focus:ring-amber-400 ${
               isFavorite
