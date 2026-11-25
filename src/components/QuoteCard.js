@@ -125,10 +125,10 @@ const QuoteCard = ({
 
       <div className="relative">
         <figure>
-          <blockquote className="font-serif text-2xl sm:text-3xl md:text-4xl leading-snug text-slate-800">
+          <blockquote className="font-serif text-2xl sm:text-3xl md:text-4xl leading-snug text-[color:var(--mfe-ink,#0f172a)]">
             {text}
           </blockquote>
-          <figcaption className="mt-6 text-sm sm:text-base font-medium uppercase tracking-[0.2em] text-slate-600">
+          <figcaption className="mt-6 text-sm sm:text-base font-medium uppercase tracking-[0.2em] text-[color:var(--mfe-muted,#475569)]">
             &mdash; {author}
           </figcaption>
         </figure>
@@ -139,7 +139,7 @@ const QuoteCard = ({
             onClick={onPrev}
             disabled={!canPrev}
             aria-label="Previous quote from history"
-            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[color:var(--mfe-muted,#475569)] shadow-sm ring-1 ring-[color:var(--mfe-border,#e2e8f0)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
           >
             <IconPrev />
             Prev
@@ -157,7 +157,7 @@ const QuoteCard = ({
             type="button"
             onClick={onCopy}
             aria-label={copied ? "Copied! Quote is on your clipboard" : "Copy quote to clipboard"}
-            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[color:var(--mfe-muted,#475569)] shadow-sm ring-1 ring-[color:var(--mfe-border,#e2e8f0)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
             <IconCopy />
             {copied ? "Copied!" : "Copy"}
@@ -166,7 +166,7 @@ const QuoteCard = ({
             type="button"
             onClick={onShare}
             aria-label="Share quote"
-            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
+            className="inline-flex items-center gap-2 rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-[color:var(--mfe-muted,#475569)] shadow-sm ring-1 ring-[color:var(--mfe-border,#e2e8f0)] hover:bg-white focus:outline-none focus:ring-2 focus:ring-amber-400"
           >
             <IconShare />
             Share
@@ -181,7 +181,7 @@ const QuoteCard = ({
             className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold shadow-sm ring-1 focus:outline-none focus:ring-2 focus:ring-amber-400 ${
               isFavorite
                 ? "bg-rose-500 text-white ring-rose-500 hover:bg-rose-600"
-                : "bg-white/70 text-slate-700 ring-slate-200 hover:bg-white"
+                : "bg-white/70 text-[color:var(--mfe-muted,#475569)] ring-[color:var(--mfe-border,#e2e8f0)] hover:bg-white"
             }`}
           >
             <IconHeart filled={isFavorite} />

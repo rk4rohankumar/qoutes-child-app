@@ -213,10 +213,10 @@ const QuotesPage = () => {
           <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-700">
             Daily Inspiration
           </p>
-          <h1 id="quotes-heading" className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-slate-900">
+          <h1 id="quotes-heading" className="mt-2 font-serif text-4xl sm:text-5xl font-bold text-[color:var(--mfe-ink,#0f172a)]">
             Quote of the Day
           </h1>
-          <p className="mt-3 text-sm text-slate-600">
+          <p className="mt-3 text-sm text-[color:var(--mfe-muted,#475569)]">
             A fresh line of wisdom, every time you ask.
           </p>
         </header>
@@ -232,7 +232,7 @@ const QuotesPage = () => {
             onClick={() => setShowFavorites((v) => !v)}
             aria-expanded={showFavorites}
             aria-controls="favorites-panel"
-            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:self-auto"
+            className="inline-flex items-center justify-center gap-2 self-start rounded-full bg-[var(--mfe-surface,#ffffff)] px-4 py-2 text-sm font-semibold text-[color:var(--mfe-muted,#475569)] shadow-sm ring-1 ring-[color:var(--mfe-border,#e2e8f0)] hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-amber-400 sm:self-auto"
           >
             {showFavorites ? "Hide favorites" : `Show favorites (${favorites.length})`}
           </button>
@@ -267,7 +267,7 @@ const QuotesPage = () => {
           >
             <h2
               id="favorites-heading"
-              className="mb-4 text-center font-serif text-2xl font-semibold text-slate-900"
+              className="mb-4 text-center font-serif text-2xl font-semibold text-[color:var(--mfe-ink,#0f172a)]"
             >
               Your favorites
             </h2>
