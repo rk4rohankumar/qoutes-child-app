@@ -4,8 +4,8 @@ const snippet = (text = "", max = 60) =>
 const FavoritesList = ({ favorites, onRemove }) => {
   if (!favorites.length) {
     return (
-      <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-slate-300 bg-white/60 p-8 text-center">
-        <p className="text-sm text-slate-600">
+      <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-[color:var(--mfe-border,#e2e8f0)] bg-white/60 p-8 text-center">
+        <p className="text-sm text-[color:var(--mfe-muted,#475569)]">
           No favorites yet. Tap the heart on a quote to save it.
         </p>
       </div>
@@ -17,13 +17,13 @@ const FavoritesList = ({ favorites, onRemove }) => {
       {favorites.map((fav) => (
         <li
           key={fav.id}
-          className="flex items-start justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm ring-1 ring-slate-200"
+          className="flex items-start justify-between gap-4 rounded-2xl bg-[var(--mfe-surface,#ffffff)] p-5 shadow-sm ring-1 ring-[color:var(--mfe-border,#e2e8f0)]"
         >
           <div className="min-w-0">
-            <p className="font-serif text-lg leading-snug text-slate-800">
+            <p className="font-serif text-lg leading-snug text-[color:var(--mfe-ink,#0f172a)]">
               {fav.text}
             </p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-[color:var(--mfe-muted,#475569)]">
               &mdash; {fav.author || "Unknown Author"}
               {fav.category ? ` - ${fav.category}` : ""}
             </p>
